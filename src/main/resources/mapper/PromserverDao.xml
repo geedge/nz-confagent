@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">    
+<mapper namespace="com.nis.dao.PromserverDao">
+	<resultMap type="com.nis.entity.Promserver" id="promserver">
+        <result property="id" column="id"/>
+        <result property="idcId" column="idc_id"/>
+        <result property="host" column="host"/>
+        <result property="relabel" column="relabel"/>
+        <result property="type" column="type"/>
+    </resultMap>
+    
+	<select id="selectList" resultMap="promserver">
+		select * from prom_server
+	</select>
+	
+	<select id="selectRoleByIp" resultMap="promserver">
+		select * from prom_server where host=#{ip}
+	</select>
+	
+	<select id="selectSubInfo" resultMap="promserver">
+		select * from prom_server where idc_id=#{promserver.idcId} and type=#{promserver.type} order by id asc
+	</select>
+	
+	<select id="selectSubInfosByType" resultMap="promserver">
+		select * from prom_server where type=#{type}
+	</select>
+</mapper>

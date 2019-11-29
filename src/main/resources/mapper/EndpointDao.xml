@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">    
+<mapper namespace="com.nis.dao.EndpointDao">
+	<resultMap type="com.nis.entity.Endpoint" id="endpoint">
+        <result property="id" column="id"/>
+        <result property="moduleId" column="module_id"/>
+        <result property="assetId" column="asset_id"/>
+        <result property="host" column="host"/>
+        <result property="port" column="port"/>
+        <result property="param" column="param"/>
+        <result property="path" column="path"/>
+        
+        <association columnPrefix="m_" property="module" javaType="com.nis.entity.Module">
+	    	<id column="module_id" property="id"/>
+	    	<result column="name" property="name"/>
+	    	<result column="remark" property="remark"/>
+	    	<result column="project_id" property="projectId"/>
+	    	<result column="port" property="port"/>
+	    	<result column="param" property="param"/>
+	    	<result column="path" property="path"/>
+	    </association>
+    </resultMap>
+	
+	<select id="selectExporterInfos" resultMap="endpoint">
+		select e.*, 
+		m.id AS m_module_id,
+		m.project_id AS m_project_id,
+		m.name AS m_name,
+		m.port AS m_port,
+		m.param AS m_param,
+		m.path AS m_path,
+		m.remark AS m_remark
+		from 
+		endpoint e left join asset a on e.asset_id=a.id 
+		left join module m on e.module_id = m.id
+		where a.idc_id=#{idcId}
+	</select>
+	
+</mapper>

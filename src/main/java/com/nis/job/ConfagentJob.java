@@ -1,0 +1,239 @@
+package com.nis.job;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.alibaba.fastjson.JSON;
+import com.nis.entity.AlertRule;
+import com.nis.entity.Endpoint;
+import com.nis.entity.Promserver;
+import com.nis.entity.SysConfig;
+import com.nis.service.AlertRuleService;
+import com.nis.service.ConfEventService;
+import com.nis.service.EndpointService;
+import com.nis.service.PromserverService;
+import com.nis.service.SysConfigService;
+import com.nis.util.PropertyPlaceholder;
+import com.nis.util.YamlUtil;
+
+/**
+ * confagent job任务相关 处理同步prometheus配置信息
+ * @author Th
+ *
+ */
+public class ConfagentJob{
+	private Logger logger = LoggerFactory.getLogger(ConfagentJob.class);
+	private Map<String,Integer> confEvents=null;
+	@Autowired
+	private PromserverService promserverService;
+	@Autowired
+	private ConfEventService confEventService;
+	@Autowired
+	private EndpointService endpointService;
+	@Autowired
+	private AlertRuleService alertRuleService;
+	@Autowired
+	private SysConfigService sysConfigService;
+	
+	public void execute(){
+		logger.info("task start");
+		//获取本机ip地址 获取本机所属角色信息
+		String ipaddr = (String)PropertyPlaceholder.getProperty("ipaddr");
+		logger.info("The local IP address is {}",ipaddr);
+		
+		Promserver promserver = promserverService.queryRoleByIp(ipaddr);
+		logger.info("The local role info {}",JSON.toJSON(promserver));
+		
+		if(promserver!=null) {
+			// 判断本次表格数据与之前数据是否有变化判断是否执行操作
+			boolean changeFlag = confEventService.compareData(confEvents);
+			//先判断conf_event表中是否有数据变化  程序初始进入map数据为空 则全量配置更新同步
+			if(confEvents==null || changeFlag ) {
+				if(promserver.getType()==1) {
+					Map centerResult = centerHandle();
+					logger.debug("center result info {} ",JSON.toJSON(centerResult));
+					if(centerResult!=null) {
+						//获取yml文件信息替换对应内容
+						try {
+							boolean handleResult = YamlUtil.centerYmlHandle(centerResult);
+							logger.info("yamlHanlde center result {}",JSON.toJSON(handleResult));
+						} catch (Exception e) {
+							logger.error("yamlHanlde center error");
+							e.printStackTrace();
+						}
+					}
+				}else if(promserver.getType()==2) {
+					List result = subHandle(promserver);
+					logger.debug("subHandle list info {} ",JSON.toJSON(result));
+					if(result!=null) {
+						//获取yml文件信息替换对应内容
+						try {
+							boolean handleResult = YamlUtil.subYmlHandle(result);
+							logger.info("yamlHanlde sub result {}",JSON.toJSON(handleResult));
+						} catch (Exception e) {
+							logger.error("yamlHanlde sub error");
+							e.printStackTrace();
+						}
+					}
+				}
+				//处理完信息配置后 将confEvent数据保存 留待下个周期比较判断
+				confEvents=confEventService.queryConfEventMap();
+			}else {
+				// 如果表中数据无更新则本次无操作
+				logger.info("There is no change in the table data. This task is completed");
+			}
+		}
+		logger.info("Synchronization configurator end");
+		System.err.println("Synchronization configurator end");
+	}
+
+	/**
+	 * 处理sub相关逻辑
+	 */
+	public List subHandle(Promserver promserver) {
+		//查询同一个idc下相同角色sub的数量以及exporter的数量信息
+		List<Promserver> subInfos = promserverService.querySubInfos(promserver);
+		logger.info("subHandle : There are {} sub in total",subInfos.size());
+		logger.info("subHandle : There are all subInfos : {}",JSON.toJSON(subInfos));
+		
+		List<Endpoint> endpointInfos = endpointService.queryExporterInfos(promserver.getIdcId());
+		logger.info("subHandle : There are {} exporter in total",endpointInfos.size());
+		logger.info("subHandle : There are all endpointInfos : {} ",JSON.toJSON(endpointInfos));
+		//获取当前sub排序信息
+		Integer index=null;
+		if(!subInfos.isEmpty()) {
+			for(int i=0;i<subInfos.size();i++) {
+				if(subInfos.get(i).getHost().equals(promserver.getHost())) {
+					index=i;
+				}
+			}
+		}
+		List result = null;
+		//两者模运算均匀分配
+		if(index!=null && !endpointInfos.isEmpty()) {
+			result=new ArrayList();
+			for(int m=0;m<endpointInfos.size();m++) {
+				if(m%subInfos.size()==index) {
+					Map job = new HashMap();
+					job.put("job_name", endpointInfos.get(m).getModule().getName()+endpointInfos.get(m).getHost());
+					List list=new ArrayList();
+					list.add(endpointInfos.get(m).getHost());
+					Map job2 = new HashMap();
+					job2.put("targets",list);
+					job.put("metrics_path", endpointInfos.get(m).getPath());
+					job.put("static_configs", job2);
+					result.add(job);
+				}
+			}
+		}
+		logger.info("subHandle : result : {} ",JSON.toJSON(result));
+		return result;
+	}
+	
+	/**
+	 * 处理center相关逻辑
+	 */
+	public Map centerHandle() {
+		Map result=new HashMap();
+		//获取所有sub信息 配置联邦
+		List<Promserver> subInfos = promserverService.querySubInfosByType(2);
+		logger.info("centerHandle : There are all subInfos : {}",JSON.toJSON(subInfos));
+		
+		// 配置组装联邦信息开始
+		List l = new ArrayList();
+		Map m1 = new LinkedHashMap();
+		m1.put("job_name", "federate");
+		
+		m1.put("scrape_interval", "15s");
+		m1.put("honor_labels", true);
+		m1.put("metrics_path", "/federate");
+		
+		
+		List l2 =new ArrayList();
+		List l3 =new ArrayList();
+		//获取默认端口号
+		String prometheusPort = (String)PropertyPlaceholder.getProperty("prometheusPort");
+		for(Promserver subInfo:subInfos) {
+			l3.add(subInfo.getHost()+":"+prometheusPort);
+		}
+		Map m2 =new HashMap();
+		m2.put("targets", l3);
+		l2.add(m2);
+		m1.put("static_configs", l2);
+		
+		Map m3 = new HashMap();
+		List l4=new ArrayList();
+		l4.add("{job=\"prometheus\"}");
+		l4.add("{__name__=~\"job:.*\"}");
+		m3.put("match[]", l4);
+		m1.put("params", m3);
+		
+		l.add(m1);
+		
+		result.put("scrape_configs", l);
+		
+		logger.info("centerHandle : scrape_configs Info : {}",JSON.toJSON(l));
+		//配置联邦信息结束
+		
+		//配置rule
+		
+		//查询所有rule配置信息
+		List<AlertRule> alertRules = alertRuleService.queryList();
+		
+		Map toCheck = new HashMap();
+		
+		List groups = new ArrayList();
+		
+		Map group = new HashMap();
+		groups.add(group);
+		
+		List rules = new ArrayList();
+		group.put("name", "alertRule");
+		group.put("rules", rules);
+
+		for(AlertRule alertRule : alertRules) {
+			Map labels = new HashMap();
+			labels.put("severity", alertRule.getSeverity());
+			Map annotations = new HashMap();
+			annotations.put("summary", alertRule.getSummary());
+			annotations.put("description", alertRule.getDescription());
+			Map rule = new HashMap();
+			rule.put("alert", alertRule.getAlertName());
+			rule.put("expr", alertRule.getExpr());
+			rule.put("for", alertRule.getLast() + "s");
+			rule.put("labels", labels);
+			rule.put("annotations", annotations);
+			rules.add(rule);
+		}
+		result.put("groups", groups);
+		
+		logger.info("centerHandle : alert rule Info : {}",JSON.toJSON(groups));
+		//配置alertManager
+		
+		//查询sys_config表获取数据
+		List<SysConfig> sysConfigs = sysConfigService.queryList();
+		Map alertManager =new HashMap();
+		List staticConfigList=new ArrayList();
+		Map staticConfigs =new HashMap();
+		staticConfigList.add(staticConfigs);
+		List staticConfig =new ArrayList();
+		Map targets =new HashMap();
+		List target =new ArrayList();
+		List alertData =new ArrayList();
+		if(!sysConfigs.isEmpty()) {
+			alertData.add(sysConfigs.get(0).getParamValue());
+		}
+		alertManager.put("alertmanagers",staticConfigList);
+		staticConfigs.put("static_configs", staticConfig);
+		staticConfig.add(targets);
+		targets.put("targets", alertData);
+		result.put("alerting", alertManager);
+		logger.info("centerHandle : alert manager Info : {}",JSON.toJSON(alertManager));
+		return result;
+	}
+}
