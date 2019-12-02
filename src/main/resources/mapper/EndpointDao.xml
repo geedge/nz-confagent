@@ -19,6 +19,35 @@
 	    	<result column="param" property="param"/>
 	    	<result column="path" property="path"/>
 	    </association>
+	    
+	    <association columnPrefix="a_" property="asset" javaType="com.nis.entity.Asset">
+	    	<id column="id" property="id"/>
+	    	<result column="sn" property="sn"/>
+	    	<result column="model_id" property="modelId"/>
+	    	<result column="idc_id" property="idcId"/>
+	    	<result column="cabinet_id" property="cabinetId"/>
+	    	<result column="host" property="host"/>
+	    	<result column="state" property="state"/>
+	    	<result column="purchase_date" property="purchaseDate"/>
+	    	<result column="create_at" property="createAt"/>
+	    	<result column="update_at" property="updateAt"/>
+	    	<result column="create_by" property="createBy"/>
+	    	<result column="update_by" property="updateBy"/>
+	    </association>
+	    
+	    <association columnPrefix="i_" property="idc" javaType="com.nis.entity.Idc">
+	    	<id column="id" property="id"/>
+	    	<result column="name" property="name"/>
+	    	<result column="location" property="location"/>
+	    	<result column="tel" property="tel"/>
+	    	<result column="principal" property="principal"/>
+	    </association>
+	    
+	    <association columnPrefix="p_" property="project" javaType="com.nis.entity.Project">
+	    	<id column="id" property="id"/>
+	    	<result column="name" property="name"/>
+	    	<result column="remark" property="remark"/>
+	    </association>
     </resultMap>
 	
 	<select id="selectExporterInfos" resultMap="endpoint">
@@ -29,10 +58,32 @@
 		m.port AS m_port,
 		m.param AS m_param,
 		m.path AS m_path,
-		m.remark AS m_remark
+		m.remark AS m_remark,
+		a.id AS a_id,
+		a.sn AS a_sn,
+		a.model_id AS a_model_id,
+		a.idc_id AS a_idc_id,
+		a.cabinet_id AS a_cabinet_id,
+		a.host AS a_host,
+		a.state AS a_state,
+		a.purchase_date AS a_purchase_date,
+		a.create_at AS a_create_at,
+		a.update_at AS a_update_at,
+		a.create_by AS a_create_by,
+		a.update_by AS a_update_by,
+		i.id AS i_id,
+		i.name AS i_name,
+		i.tel AS i_tel,
+		i.location AS i_location,
+		i.principal AS i_principal,
+		p.id AS p_id,
+		p.name AS p_name,
+		p.remark AS p_remark
 		from 
 		endpoint e left join asset a on e.asset_id=a.id 
 		left join module m on e.module_id = m.id
+		left join idc i on a.idc_id=i.id
+		left join project p on m.project_id =p.id
 		where a.idc_id=#{idcId}
 	</select>
 	

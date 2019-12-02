@@ -51,7 +51,7 @@ public class ConfagentJob{
 	@Value("${prometheusPort}")
 	private	String prometheusPort;
 	
-	
+	@SuppressWarnings("unchecked")
 	public void execute(){
 		logger.info("task start");
 		//获取本机ip地址 获取本机所属角色信息
@@ -140,6 +140,13 @@ public class ConfagentJob{
 					job2.put("targets",list);
 					job.put("metrics_path", endpointInfos.get(m).getPath());
 					job.put("static_configs", job2);
+					Map job3 = new HashMap();
+					job3.put("idc", endpointInfos.get(m).getIdc().getName());
+					job3.put("project", endpointInfos.get(m).getProject().getName());
+					job3.put("asset",endpointInfos.get(m).getAsset().getSn());
+					job3.put("module",endpointInfos.get(m).getModule().getName());
+					job3.put("host", endpointInfos.get(m).getAsset().getHost());
+					job.put("labels", job3);
 					result.add(job);
 				}
 			}
@@ -179,12 +186,12 @@ public class ConfagentJob{
 		l2.add(m2);
 		m1.put("static_configs", l2);
 		
-		Map m3 = new HashMap();
+		/*Map m3 = new HashMap();
 		List l4=new ArrayList();
 		l4.add("{job=\"prometheus\"}");
 		l4.add("{__name__=~\"job:.*\"}");
 		m3.put("match[]", l4);
-		m1.put("params", m3);
+		m1.put("params", m3);*/
 		
 		l.add(m1);
 		

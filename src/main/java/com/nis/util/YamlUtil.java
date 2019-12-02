@@ -1,83 +1,70 @@
 package com.nis.util;
 
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.junit.platform.commons.util.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
-
-import com.alibaba.fastjson.JSON;
-
-
 
 public class YamlUtil {
 	
 	private static Yaml y;
-	@Autowired
-	private ConfigUtil configUtil;
 	
 	static {
 		DumperOptions options = new DumperOptions();
 		options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
 		y = new Yaml(options);
 	}
-
-	public static boolean subYmlHandle(List param,String ymlPath) throws Exception {
+	
+	@SuppressWarnings("unchecked")
+	public static boolean subYmlHandle(List<Object> param,String ymlPath) throws Exception {
 		boolean flag=false;
-		if(!param.isEmpty() && StringUtils.isNotBlank(ymlPath)) {
+		if(!param.isEmpty() && ymlPath != null && ymlPath.length() != 0) {
 			File file = new File(ymlPath);
 			FileInputStream fileInputStream  = new FileInputStream(file);
-			Map map = y.loadAs(fileInputStream, Map.class);
+			Map<String,Object> map = y.loadAs(fileInputStream, Map.class);
 			map.put("scrape_configs", param);
 			OutputStream out = new FileOutputStream(file);
 			OutputStreamWriter osw = new OutputStreamWriter(out, "UTF-8");
 			y.dump(map,osw);
-//			RuntimeUtil.run(null, null, new String[]{"kill -hup `ps -ef |grep prometheus|grep -v grep|awk '{print $2}'`"});
+			RuntimeUtil.run(null, null, new String[]{"kill -hup `ps -ef |grep prometheus|grep -v grep|awk '{print $2}'`"});
 			flag = true;
 		}
 		return flag;
 	}
 	
-	public static boolean centerYmlHandle(Map param,String ymlPath) throws Exception {
+	@SuppressWarnings("unchecked")
+	public static boolean centerYmlHandle(Map<String,Object> param,String ymlPath) throws Exception {
 		boolean flag=false;
-		if(!param.isEmpty() && StringUtils.isNotBlank(ymlPath)) {
+		if(!param.isEmpty() && ymlPath != null && ymlPath.length() != 0) {
 			File file = new File(ymlPath);
 			FileInputStream fileInputStream  = new FileInputStream(file);
-			Map map = y.loadAs(fileInputStream, Map.class);
+			Map<String,Object> map = y.loadAs(fileInputStream, Map.class);
 			map.put("scrape_configs", param.get("scrape_configs"));
 			map.put("groups", param.get("groups"));
 			map.put("alerting", param.get("alerting"));
 			OutputStream out = new FileOutputStream(file);
 			OutputStreamWriter osw = new OutputStreamWriter(out, "UTF-8");
 			y.dump(map,osw);
-//			RuntimeUtil.run(null, null, new String[]{"kill -hup `ps -ef |grep prometheus|grep -v grep|awk '{print $2}'`"});
+			RuntimeUtil.run(null, null, new String[]{"kill -hup `ps -ef |grep prometheus|grep -v grep|awk '{print $2}'`"});
 			flag = true;
 		}
 		return flag;
 	}
 	
 	
-	public static void main(String[] args) throws Exception {
+	/*public static void main(String[] args) throws Exception {
 //		File file = new File("F:/workspace/nz-web/nz-admin/tmp/promRuleCheck1574925561786.yml");
 		File file = new File("F:/prometheus.yml");
 		FileInputStream fileInputStream  = new FileInputStream(file);
 		Map map = y.loadAs(fileInputStream, Map.class);
 
-		/**
+		*//**
 		List l = new ArrayList();
 		Map m1 = new LinkedHashMap();
 		m1.put("job_name", "federate");
@@ -107,9 +94,9 @@ public class YamlUtil {
 		
 		l.add(m1);
 		map.put("scrape_configs", l);
-		**/
+		**//*
 		
-		/*Map toCheck = new HashMap();
+		Map toCheck = new HashMap();
 		
 		List groups = new ArrayList();
 		
@@ -134,7 +121,7 @@ public class YamlUtil {
 			rule.put("annotations", annotations);
 			rules.add(rule);
 		}
-		map.put("groups", groups);*/
+		map.put("groups", groups);
 		
 		Map alertManager =new HashMap();
 		List staticConfigList=new ArrayList();
@@ -153,5 +140,5 @@ public class YamlUtil {
 		OutputStream out = new FileOutputStream(file);
 		OutputStreamWriter osw = new OutputStreamWriter(out, "UTF-8");
 		y.dump(map,osw);
-	}
+	}*/
 }

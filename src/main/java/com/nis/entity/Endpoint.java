@@ -12,6 +12,10 @@ public class Endpoint implements Serializable{
 	private String param;
 	private String path;
 	private Module module;
+	private Asset asset;
+	private Idc idc;
+	private Integer idcId;
+	private Project project;
 	public Integer getId() {
 		return id;
 	}
@@ -60,4 +64,29 @@ public class Endpoint implements Serializable{
 	public void setModule(Module module) {
 		this.module = module;
 	}
+	public Asset getAsset() {
+		return asset;
+	}
+	public void setAsset(Asset asset) {
+		this.asset = asset;
+	}
+	public Idc getIdc() {
+		return idc;
+	}
+	public void setIdc(Idc idc) {
+		this.idc = idc;
+	}
+	public Integer getIdcId() {
+		return idcId;
+	}
+	public void setIdcId(Integer idcId) {
+		this.idcId = idcId;
+	}
+	public Project getProject() {
+		return project;
+	}
+	public void setProject(Project project) {
+		this.project = project;
+	}
 }
+
