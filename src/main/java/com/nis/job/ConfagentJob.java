@@ -8,6 +8,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+
 import com.alibaba.fastjson.JSON;
 import com.nis.entity.AlertRule;
 import com.nis.entity.Endpoint;
@@ -18,6 +20,7 @@ import com.nis.service.ConfEventService;
 import com.nis.service.EndpointService;
 import com.nis.service.PromserverService;
 import com.nis.service.SysConfigService;
+import com.nis.util.ConfigUtil;
 import com.nis.util.PropertyPlaceholder;
 import com.nis.util.YamlUtil;
 
@@ -39,15 +42,25 @@ public class ConfagentJob{
 	private AlertRuleService alertRuleService;
 	@Autowired
 	private SysConfigService sysConfigService;
+	@Autowired
+    private ConfigUtil configUtil;
+	@Value("${ipaddr}")
+	private String ipaddr;
+	@Value("${ymlPath}")
+	private String ymlPath;
+	@Value("${prometheusPort}")
+	private	String prometheusPort;
+	
 	
 	public void execute(){
 		logger.info("task start");
 		//获取本机ip地址 获取本机所属角色信息
-		String ipaddr = (String)PropertyPlaceholder.getProperty("ipaddr");
 		logger.info("The local IP address is {}",ipaddr);
 		
 		Promserver promserver = promserverService.queryRoleByIp(ipaddr);
 		logger.info("The local role info {}",JSON.toJSON(promserver));
+		
+		logger.info("The local ymlPath info {}",JSON.toJSON(ymlPath));
 		
 		if(promserver!=null) {
 			// 判断本次表格数据与之前数据是否有变化判断是否执行操作
@@ -60,7 +73,7 @@ public class ConfagentJob{
 					if(centerResult!=null) {
 						//获取yml文件信息替换对应内容
 						try {
-							boolean handleResult = YamlUtil.centerYmlHandle(centerResult);
+							boolean handleResult = YamlUtil.centerYmlHandle(centerResult,ymlPath);
 							logger.info("yamlHanlde center result {}",JSON.toJSON(handleResult));
 						} catch (Exception e) {
 							logger.error("yamlHanlde center error");
@@ -73,7 +86,7 @@ public class ConfagentJob{
 					if(result!=null) {
 						//获取yml文件信息替换对应内容
 						try {
-							boolean handleResult = YamlUtil.subYmlHandle(result);
+							boolean handleResult = YamlUtil.subYmlHandle(result,ymlPath);
 							logger.info("yamlHanlde sub result {}",JSON.toJSON(handleResult));
 						} catch (Exception e) {
 							logger.error("yamlHanlde sub error");
@@ -157,7 +170,7 @@ public class ConfagentJob{
 		List l2 =new ArrayList();
 		List l3 =new ArrayList();
 		//获取默认端口号
-		String prometheusPort = (String)PropertyPlaceholder.getProperty("prometheusPort");
+//		String prometheusPort = (String)PropertyPlaceholder.getProperty("prometheusPort");
 		for(Promserver subInfo:subInfos) {
 			l3.add(subInfo.getHost()+":"+prometheusPort);
 		}

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.platform.commons.util.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -26,6 +27,8 @@ import com.alibaba.fastjson.JSON;
 public class YamlUtil {
 	
 	private static Yaml y;
+	@Autowired
+	private ConfigUtil configUtil;
 	
 	static {
 		DumperOptions options = new DumperOptions();
@@ -33,9 +36,8 @@ public class YamlUtil {
 		y = new Yaml(options);
 	}
 
-	public static boolean subYmlHandle(List param) throws Exception {
+	public static boolean subYmlHandle(List param,String ymlPath) throws Exception {
 		boolean flag=false;
-		String ymlPath = (String)PropertyPlaceholder.getProperty("ymlPath");
 		if(!param.isEmpty() && StringUtils.isNotBlank(ymlPath)) {
 			File file = new File(ymlPath);
 			FileInputStream fileInputStream  = new FileInputStream(file);
@@ -50,9 +52,8 @@ public class YamlUtil {
 		return flag;
 	}
 	
-	public static boolean centerYmlHandle(Map param) throws Exception {
+	public static boolean centerYmlHandle(Map param,String ymlPath) throws Exception {
 		boolean flag=false;
-		String ymlPath = (String)PropertyPlaceholder.getProperty("ymlPath");
 		if(!param.isEmpty() && StringUtils.isNotBlank(ymlPath)) {
 			File file = new File(ymlPath);
 			FileInputStream fileInputStream  = new FileInputStream(file);
