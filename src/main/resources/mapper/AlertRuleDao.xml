@@ -10,6 +10,8 @@
         <result property="summary" column="summary"/>
         <result property="description" column="description"/>
         <result property="receiver" column="receiver"/>
+        <result property="type" column="type"/>
+        <result property="linkId" column="link_id"/>
     </resultMap>
     
 	<select id="selectList" resultMap="alertRule">

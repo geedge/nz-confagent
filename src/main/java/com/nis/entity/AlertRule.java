@@ -33,6 +33,14 @@ public class AlertRule implements Serializable{
 	 * 通知用户组
 	 */
 	private Integer receiver;
+	/**
+	 * 告警类型
+	 */
+	private Integer type;
+	/**
+	 * 关联id
+	 */
+	private Integer linkId;
 	public Integer getId() {
 		return id;
 	}
@@ -81,5 +89,16 @@ public class AlertRule implements Serializable{
 	public void setReceiver(Integer receiver) {
 		this.receiver = receiver;
 	}
-	
+	public Integer getType() {
+		return type;
+	}
+	public void setType(Integer type) {
+		this.type = type;
+	}
+	public Integer getLinkId() {
+		return linkId;
+	}
+	public void setLinkId(Integer linkId) {
+		this.linkId = linkId;
+	}
 }
