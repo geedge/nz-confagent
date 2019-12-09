@@ -179,7 +179,7 @@ public class ConfagentJob{
 		//获取默认端口号
 //		String prometheusPort = (String)PropertyPlaceholder.getProperty("prometheusPort");
 		for(Promserver subInfo:subInfos) {
-			l3.add(subInfo.getHost()+":"+prometheusPort);
+			l3.add(subInfo.getHost()+":"+subInfo.getPort());
 		}
 		Map m2 =new HashMap();
 		m2.put("targets", l3);

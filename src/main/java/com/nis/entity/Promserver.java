@@ -8,7 +8,7 @@ public class Promserver implements Serializable{
 	private Integer id;
 	private Integer idcId;
 	private String host;
-	private String relabel;
+	private Integer port;
 	private Integer type;
 	public Integer getId() {
 		return id;
@@ -28,18 +28,16 @@ public class Promserver implements Serializable{
 	public void setHost(String host) {
 		this.host = host;
 	}
-	public String getRelabel() {
-		return relabel;
-	}
-	public void setRelabel(String relabel) {
-		this.relabel = relabel;
-	}
 	public Integer getType() {
 		return type;
 	}
 	public void setType(Integer type) {
 		this.type = type;
 	}
-	
-	
+	public Integer getPort() {
+		return port;
+	}
+	public void setPort(Integer port) {
+		this.port = port;
+	}	
 }
