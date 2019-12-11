@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.yaml.snakeyaml.DumperOptions;
@@ -28,30 +29,52 @@ public class YamlUtil {
 			File file = new File(ymlPath);
 			FileInputStream fileInputStream  = new FileInputStream(file);
 			Map<String,Object> map = y.loadAs(fileInputStream, Map.class);
+			if(map==null) {
+				map=new HashMap();
+			}
 			map.put("scrape_configs", param);
 			OutputStream out = new FileOutputStream(file);
 			OutputStreamWriter osw = new OutputStreamWriter(out, "UTF-8");
 			y.dump(map,osw);
-			RuntimeUtil.run(null, null, new String[]{"kill -hup `ps -ef |grep prometheus|grep -v grep|awk '{print $2}'`"});
+//			RuntimeUtil.run(null, null, new String[]{"kill","-hup","`ps -ef |grep prometheus|grep -v grep|awk \'{print $2}\'`"});
+			RuntimeUtil.run(null, null, new String[]{"/bin/sh", "-c","ps -ef |grep prometheus|grep -v grep|awk \'{print $2}\'|xargs kill -hup"});
 			flag = true;
 		}
 		return flag;
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static boolean centerYmlHandle(Map<String,Object> param,String ymlPath) throws Exception {
+	public static boolean centerYmlHandle(Map<String,Object> param,String ymlPath,String ruleYmlPath) throws Exception {
 		boolean flag=false;
 		if(!param.isEmpty() && ymlPath != null && ymlPath.length() != 0) {
-			File file = new File(ymlPath);
-			FileInputStream fileInputStream  = new FileInputStream(file);
+			
+			// 修改prometheus.yml配置文件
+			File ymlfile = new File(ymlPath);
+			FileInputStream fileInputStream  = new FileInputStream(ymlfile);
 			Map<String,Object> map = y.loadAs(fileInputStream, Map.class);
+			if(map==null) {
+				map=new HashMap();
+			}
 			map.put("scrape_configs", param.get("scrape_configs"));
-			map.put("groups", param.get("groups"));
 			map.put("alerting", param.get("alerting"));
-			OutputStream out = new FileOutputStream(file);
+			OutputStream out = new FileOutputStream(ymlfile);
 			OutputStreamWriter osw = new OutputStreamWriter(out, "UTF-8");
 			y.dump(map,osw);
-			RuntimeUtil.run(null, null, new String[]{"kill -hup `ps -ef |grep prometheus|grep -v grep|awk '{print $2}'`"});
+			
+			//修改 rule.yml配置文件
+			File ruleYmlfile = new File(ruleYmlPath);
+			FileInputStream fileInputStream2  = new FileInputStream(ruleYmlfile);
+			Map<String,Object> map2 = y.loadAs(fileInputStream2, Map.class);
+			if(map2==null) {
+				map2=new HashMap();
+			}
+			map2.put("groups", param.get("groups"));
+			OutputStream out2 = new FileOutputStream(ruleYmlfile);
+			OutputStreamWriter osw2 = new OutputStreamWriter(out2, "UTF-8");
+			y.dump(map2,osw2);
+			
+			RuntimeUtil.run(null, null, new String[]{"/bin/sh", "-c","ps -ef |grep prometheus|grep -v grep|awk \'{print $2}\'|xargs kill -hup"});
+//			RuntimeUtil.run(null, null, new String[]{"kill","-hup","`ps -ef |grep prometheus|grep -v grep|awk \'{print $2}\'`"});
 			flag = true;
 		}
 		return flag;

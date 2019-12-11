@@ -48,6 +48,8 @@ public class ConfagentJob{
 	private String ipaddr;
 	@Value("${ymlPath}")
 	private String ymlPath;
+	@Value("${ruleYmlPath}")
+	private String ruleYmlPath;
 	@Value("${prometheusPort}")
 	private	String prometheusPort;
 	
@@ -62,6 +64,7 @@ public class ConfagentJob{
 		
 		logger.info("The local ymlPath info {}",JSON.toJSON(ymlPath));
 		
+		logger.info("The local ruleYmlPath info {}",JSON.toJSON(ruleYmlPath));
 		if(promserver!=null) {
 			// 判断本次表格数据与之前数据是否有变化判断是否执行操作
 			boolean changeFlag = confEventService.compareData(confEvents);
@@ -73,7 +76,7 @@ public class ConfagentJob{
 					if(centerResult!=null) {
 						//获取yml文件信息替换对应内容
 						try {
-							boolean handleResult = YamlUtil.centerYmlHandle(centerResult,ymlPath);
+							boolean handleResult = YamlUtil.centerYmlHandle(centerResult,ymlPath,ruleYmlPath);
 							logger.info("yamlHanlde center result {}",JSON.toJSON(handleResult));
 						} catch (Exception e) {
 							logger.error("yamlHanlde center error");
@@ -97,6 +100,8 @@ public class ConfagentJob{
 				//处理完信息配置后 将confEvent数据保存 留待下个周期比较判断
 				confEvents=confEventService.queryConfEventMap();
 			}else {
+				logger.info("confEvents list info {}",JSON.toJSON(confEvents));
+				logger.info("changeflag is {}",changeFlag);
 				// 如果表中数据无更新则本次无操作
 				logger.info("There is no change in the table data. This task is completed");
 			}
@@ -132,21 +137,23 @@ public class ConfagentJob{
 			result=new ArrayList();
 			for(int m=0;m<endpointInfos.size();m++) {
 				if(m%subInfos.size()==index) {
-					Map job = new HashMap();
+					LinkedHashMap job = new LinkedHashMap();
 					job.put("job_name", endpointInfos.get(m).getModule().getName()+endpointInfos.get(m).getHost());
+					job.put("metrics_path", endpointInfos.get(m).getPath());
 					List list=new ArrayList();
-					list.add(endpointInfos.get(m).getHost());
+					list.add(endpointInfos.get(m).getHost()+":"+endpointInfos.get(m).getPort());
+					List list2=new ArrayList();
 					Map job2 = new HashMap();
 					job2.put("targets",list);
-					job.put("metrics_path", endpointInfos.get(m).getPath());
-					job.put("static_configs", job2);
 					Map job3 = new HashMap();
 					job3.put("idc", endpointInfos.get(m).getIdc().getName());
 					job3.put("project", endpointInfos.get(m).getProject().getName());
 					job3.put("asset",endpointInfos.get(m).getAsset().getSn());
 					job3.put("module",endpointInfos.get(m).getModule().getName());
 					job3.put("host", endpointInfos.get(m).getAsset().getHost());
-					job.put("labels", job3);
+					job2.put("labels", job3);
+					list2.add(job2);
+					job.put("static_configs", list2);
 					result.add(job);
 				}
 			}
