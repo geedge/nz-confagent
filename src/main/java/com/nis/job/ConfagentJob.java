@@ -148,12 +148,29 @@ public class ConfagentJob{
 					Map job3 = new HashMap();
 					job3.put("idc", endpointInfos.get(m).getIdc().getName());
 					job3.put("project", endpointInfos.get(m).getProject().getName());
-					job3.put("asset",endpointInfos.get(m).getAsset().getSn());
+					job3.put("asset",endpointInfos.get(m).getAsset().getHost());
 					job3.put("module",endpointInfos.get(m).getModule().getName());
-					job3.put("host", endpointInfos.get(m).getAsset().getHost());
+					job3.put("job", "ed_"+endpointInfos.get(m).getId());
+//					job3.put("host", endpointInfos.get(m).getAsset().getHost());
 					job2.put("labels", job3);
 					list2.add(job2);
 					job.put("static_configs", list2);
+					
+					//处理endpoint中param字段json串 请求参数
+					String param = endpointInfos.get(m).getParam();
+					Map params=null;
+					if(param!=null && !param.isEmpty()) {
+						params=new HashMap();
+						Map<String,String> json = (Map) JSON.parse(param);
+						for(Map.Entry<String, String> a:json.entrySet()){
+							List paramList =new ArrayList();
+							paramList.add(a.getValue());
+							params.put(a.getKey(),paramList);
+						}
+					}
+					if(params!=null) {
+						job.put("params",params);
+					}
 					result.add(job);
 				}
 			}
@@ -176,7 +193,7 @@ public class ConfagentJob{
 		Map m1 = new LinkedHashMap();
 		m1.put("job_name", "federate");
 		
-		m1.put("scrape_interval", "15s");
+//		m1.put("scrape_interval", "15s");
 		m1.put("honor_labels", true);
 		m1.put("metrics_path", "/federate");
 		
@@ -193,12 +210,12 @@ public class ConfagentJob{
 		l2.add(m2);
 		m1.put("static_configs", l2);
 		
-		/*Map m3 = new HashMap();
+		Map m3 = new HashMap();
 		List l4=new ArrayList();
-		l4.add("{job=\"prometheus\"}");
-		l4.add("{__name__=~\"job:.*\"}");
+//		l4.add("{job=\"prometheus\"}");
+		l4.add("{idc=~\".+\"}");
 		m3.put("match[]", l4);
-		m1.put("params", m3);*/
+		m1.put("params", m3);
 		
 		l.add(m1);
 		
