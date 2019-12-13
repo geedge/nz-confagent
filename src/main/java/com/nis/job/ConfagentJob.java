@@ -138,7 +138,8 @@ public class ConfagentJob{
 			for(int m=0;m<endpointInfos.size();m++) {
 				if(m%subInfos.size()==index) {
 					LinkedHashMap job = new LinkedHashMap();
-					job.put("job_name", endpointInfos.get(m).getModule().getName()+endpointInfos.get(m).getHost());
+//					job.put("job_name", endpointInfos.get(m).getModule().getName()+endpointInfos.get(m).getHost());
+					job.put("job_name", "ed_"+endpointInfos.get(m).getId());
 					job.put("metrics_path", endpointInfos.get(m).getPath());
 					List list=new ArrayList();
 					list.add(endpointInfos.get(m).getHost()+":"+endpointInfos.get(m).getPort());
@@ -150,7 +151,7 @@ public class ConfagentJob{
 					job3.put("project", endpointInfos.get(m).getProject().getName());
 					job3.put("asset",endpointInfos.get(m).getAsset().getHost());
 					job3.put("module",endpointInfos.get(m).getModule().getName());
-					job3.put("job", "ed_"+endpointInfos.get(m).getId());
+//					job3.put("job", "ed_"+endpointInfos.get(m).getId());
 //					job3.put("host", endpointInfos.get(m).getAsset().getHost());
 					job2.put("labels", job3);
 					list2.add(job2);
