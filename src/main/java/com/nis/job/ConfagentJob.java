@@ -189,6 +189,11 @@ public class ConfagentJob{
 		List<Promserver> subInfos = promserverService.querySubInfosByType(2);
 		logger.info("centerHandle : There are all subInfos : {}",JSON.toJSON(subInfos));
 		
+		//配置rule相关文件信息 目前固定为rule.yml
+		List ruleFile =new ArrayList();
+		ruleFile.add("rule.yml");
+		result.put("rule_files", ruleFile);
+		
 		// 配置组装联邦信息开始
 		List l = new ArrayList();
 		Map m1 = new LinkedHashMap();
@@ -250,7 +255,7 @@ public class ConfagentJob{
 			annotations.put("summary", alertRule.getSummary());
 			annotations.put("description", alertRule.getDescription());
 			Map rule = new HashMap();
-			rule.put("alert", alertRule.getAlertName());
+			rule.put("alert", alertRule.getId());
 			rule.put("expr", alertRule.getExpr());
 			rule.put("for", alertRule.getLast() + "s");
 			rule.put("labels", labels);

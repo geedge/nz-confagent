@@ -57,12 +57,17 @@ public class YamlUtil {
 			}
 			map.put("scrape_configs", param.get("scrape_configs"));
 			map.put("alerting", param.get("alerting"));
+			map.put("rule_files", param.get("rule_files"));
 			OutputStream out = new FileOutputStream(ymlfile);
 			OutputStreamWriter osw = new OutputStreamWriter(out, "UTF-8");
 			y.dump(map,osw);
 			
 			//修改 rule.yml配置文件
 			File ruleYmlfile = new File(ruleYmlPath);
+			if(!ruleYmlfile.exists()){
+				// 文件不存在 创建文件
+				ruleYmlfile.createNewFile();
+			}
 			FileInputStream fileInputStream2  = new FileInputStream(ruleYmlfile);
 			Map<String,Object> map2 = y.loadAs(fileInputStream2, Map.class);
 			if(map2==null) {
