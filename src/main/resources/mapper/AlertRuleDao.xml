@@ -12,10 +12,14 @@
         <result property="receiver" column="receiver"/>
         <result property="type" column="type"/>
         <result property="linkId" column="link_id"/>
+        <result property="buildIn" column="build_in"/>
     </resultMap>
     
 	<select id="selectList" resultMap="alertRule">
-		select * from alert_rule
+		select * from alert_rule where build_in != 1
 	</select>
 	
+	<select id="selectBulidInRule" resultMap="alertRule">
+		select * from alert_rule where build_in = 1
+	</select>
 </mapper>

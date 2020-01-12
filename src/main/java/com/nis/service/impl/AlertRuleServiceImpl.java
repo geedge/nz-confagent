@@ -19,4 +19,14 @@ public class AlertRuleServiceImpl implements AlertRuleService {
 	public List<AlertRule> queryList() {
 		return alertRuleDao.selectList();
 	}
+
+	@Override
+	public AlertRule queryBulidInRule() {
+		List<AlertRule> results = alertRuleDao.selectBulidInRule();
+		if(results!=null && results.size()>0) {
+			return results.get(0);
+		}else {
+			return null;
+		}
+	}
 }

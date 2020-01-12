@@ -41,6 +41,10 @@ public class AlertRule implements Serializable{
 	 * 关联id
 	 */
 	private Integer linkId;
+	/**
+	 * 是否为内置规则
+	 */
+	private Boolean buildIn;
 	public Integer getId() {
 		return id;
 	}
@@ -100,5 +104,11 @@ public class AlertRule implements Serializable{
 	}
 	public void setLinkId(Integer linkId) {
 		this.linkId = linkId;
+	}
+	public Boolean getBuildIn() {
+		return buildIn;
+	}
+	public void setBuildIn(Boolean buildIn) {
+		this.buildIn = buildIn;
 	}
 }

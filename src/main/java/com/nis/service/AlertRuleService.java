@@ -9,4 +9,6 @@ import com.nis.entity.ConfEvent;
 public interface AlertRuleService {
 	
 	public List<AlertRule> queryList();
+	
+	public AlertRule queryBulidInRule();
 }

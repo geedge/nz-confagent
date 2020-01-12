@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.alibaba.fastjson.JSON;
 import com.nis.dao.ConfEventDao;
 import com.nis.entity.ConfEvent;
 import com.nis.service.ConfEventService;
@@ -40,7 +41,7 @@ public class ConfEventServiceImpl implements ConfEventService {
 		}
 		List<ConfEvent> datas = confEventDao.selectList();
 		for(ConfEvent data:datas) {
-			if(!(data.getValue()==map.get(data.getTable()))) {
+			if(!(data.getValue().equals(map.get(data.getTable())))) {
 				flag = true;
 			}
 		}

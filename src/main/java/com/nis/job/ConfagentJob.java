@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.alibaba.fastjson.JSON;
+import com.nis.entity.AlertManagerEnum;
 import com.nis.entity.AlertRule;
 import com.nis.entity.Endpoint;
 import com.nis.entity.Promserver;
@@ -69,7 +70,10 @@ public class ConfagentJob{
 			// 判断本次表格数据与之前数据是否有变化判断是否执行操作
 			boolean changeFlag = confEventService.compareData(confEvents);
 			//先判断conf_event表中是否有数据变化  程序初始进入map数据为空 则全量配置更新同步
+			logger.debug("before confEvents data {} ",JSON.toJSON(confEvents));
 			if(confEvents==null || changeFlag ) {
+				logger.debug("data had change confEvents data {}",JSON.toJSON(confEvents));
+				logger.debug("data had change flag {}",changeFlag);
 				if(promserver.getType()==1) {
 					Map centerResult = centerHandle();
 					logger.debug("center result info {} ",JSON.toJSON(centerResult));
@@ -107,7 +111,6 @@ public class ConfagentJob{
 			}
 		}
 		logger.info("Synchronization configurator end");
-		System.err.println("Synchronization configurator end");
 	}
 
 	/**
@@ -147,7 +150,7 @@ public class ConfagentJob{
 					Map job2 = new HashMap();
 					job2.put("targets",list);
 					Map job3 = new HashMap();
-					job3.put("idc", endpointInfos.get(m).getIdc().getName());
+					job3.put("dc", endpointInfos.get(m).getIdc().getName());
 					job3.put("project", endpointInfos.get(m).getProject().getName());
 					job3.put("asset",endpointInfos.get(m).getAsset().getHost());
 					job3.put("module",endpointInfos.get(m).getModule().getName());
@@ -219,7 +222,7 @@ public class ConfagentJob{
 		Map m3 = new HashMap();
 		List l4=new ArrayList();
 //		l4.add("{job=\"prometheus\"}");
-		l4.add("{idc=~\".+\"}");
+		l4.add("{dc=~\".+\"}");
 		m3.put("match[]", l4);
 		m1.put("params", m3);
 		
@@ -271,14 +274,23 @@ public class ConfagentJob{
 		List<SysConfig> sysConfigs = sysConfigService.queryList();
 		Map alertManager =new HashMap();
 		List staticConfigList=new ArrayList();
-		Map staticConfigs =new HashMap();
+		LinkedHashMap staticConfigs =new LinkedHashMap();
 		staticConfigList.add(staticConfigs);
 		List staticConfig =new ArrayList();
 		Map targets =new HashMap();
 		List target =new ArrayList();
 		List alertData =new ArrayList();
 		if(!sysConfigs.isEmpty()) {
-			alertData.add(sysConfigs.get(0).getParamValue());
+			for(SysConfig sysconfig : sysConfigs) {
+				if(sysconfig.getParamKey().equals(AlertManagerEnum.Alert_api.getValue())) {
+					alertData.add(sysconfig.getParamValue());
+				}else if(sysconfig.getParamKey().equals(AlertManagerEnum.Alert_path_prefix.getValue())){
+					staticConfigs.put("path_prefix", sysconfig.getParamValue());
+				}
+			}
+		}
+		if(staticConfigs.get("path_prefix")==null) {
+			staticConfigs.put("path_prefix","/");
 		}
 		alertManager.put("alertmanagers",staticConfigList);
 		staticConfigs.put("static_configs", staticConfig);
