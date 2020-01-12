@@ -111,29 +111,6 @@ public class SNMPTrapServer implements CommandResponder{// implements CommandRes
 	}*/
 	
 	public void initServer() throws Exception{
-		System.err.println("-------------------------------");
-		System.err.println("-------------------------------");
-		System.err.println("-------------------------------");
-		System.err.println("-------------------------------");
-		System.err.println("-------------------------------");
-		System.err.println("-------------------------------");
-		//加载alert_rule表内置规则
-		alertRule=alertRuleService.queryBulidInRule();
-		List<SysConfig> sysConfigs = sysConfigService.queryList();
-		if(!sysConfigs.isEmpty()) {
-			for(SysConfig sysconfig : sysConfigs) {
-				if(sysconfig.getParamKey().equals(AlertManagerEnum.Alert_api.getValue())) {
-					alertApi=sysconfig.getParamValue();
-				}else if(sysconfig.getParamKey().equals(AlertManagerEnum.Alert_path_prefix.getValue())){
-					alertPathPrefix=sysconfig.getParamValue();
-				}
-			}
-			logger.info("sysconfig alert api info {}",alertApi);
-			logger.info("sysconfig alert path prefix info {}",alertPathPrefix);
-		}else {
-			logger.error("Sysconfig missing alert_api or alert_path_prefix data");
-			return;
-		}
 		logger.info("snmpTrapThredPoolSize is {}",snmpTrapThredPoolSize);
 		ThreadPool threadPool = ThreadPool.create("Trap", Integer.valueOf(snmpTrapThredPoolSize));
 		logger.info("snmpTrapThredPoolSize is {}",snmpTrapThredPoolSize);
@@ -200,6 +177,24 @@ public class SNMPTrapServer implements CommandResponder{// implements CommandRes
 	{
 		try
 		{
+			//考虑数据库数据可能存在变化 由仅查询一次更改为每次都确认一下数据信息
+			//加载alert_rule表内置规则
+			alertRule=alertRuleService.queryBulidInRule();
+			List<SysConfig> sysConfigs = sysConfigService.queryList();
+			if(!sysConfigs.isEmpty()) {
+				for(SysConfig sysconfig : sysConfigs) {
+					if(sysconfig.getParamKey().equals(AlertManagerEnum.Alert_api.getValue())) {
+						alertApi=sysconfig.getParamValue();
+					}else if(sysconfig.getParamKey().equals(AlertManagerEnum.Alert_path_prefix.getValue())){
+						alertPathPrefix=sysconfig.getParamValue();
+					}
+				}
+				logger.info("sysconfig alert api info {}",alertApi);
+				logger.info("sysconfig alert path prefix info {}",alertPathPrefix);
+			}else {
+				logger.error("Sysconfig missing alert_api or alert_path_prefix data");
+				return;
+			}
 			logger.info("processPdu start");
 			logger.info("alertRule info is {}",JSON.toJSON(alertRule));
 			if(alertRule==null) {
