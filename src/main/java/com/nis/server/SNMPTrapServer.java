@@ -355,7 +355,7 @@ public class SNMPTrapServer implements CommandResponder{// implements CommandRes
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity entity =new HttpEntity(mess,headers);
-			String url="http://"+alertApi+alertPathPrefix+"/api/v1/alerts";
+			String url="http://0.0.0.0"+alertPathPrefix+"/api/v1/alerts";
 			Object postForEntity = restTemplate.postForEntity(url, entity,Object.class);
 			logger.info("post success info {}",JSON.toJSON(postForEntity));
 		}
