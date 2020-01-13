@@ -115,7 +115,7 @@ public class SNMPTrapServer implements CommandResponder{// implements CommandRes
 		ThreadPool threadPool = ThreadPool.create("Trap", Integer.valueOf(snmpTrapThredPoolSize));
 		logger.info("snmpTrapThredPoolSize is {}",snmpTrapThredPoolSize);
 		MultiThreadedMessageDispatcher dispatcher = new MultiThreadedMessageDispatcher(threadPool,	new MessageDispatcherImpl());
-		Address listenAddress = GenericAddress.parse(System.getProperty("snmp4j.listenAddress", "udp:" + snmpIp + "/" + snmpTrapPort)); // 本地IP与监听端口
+		Address listenAddress = GenericAddress.parse(System.getProperty("snmp4j.listenAddress", "udp:0.0.0.0/" + snmpTrapPort)); // 本地IP与监听端口
 		logger.info("snmpTrapPort is {}",snmpTrapPort);
 		logger.info("ipaddr is {}",snmpIp);
 		TransportMapping transport = null;
@@ -355,7 +355,7 @@ public class SNMPTrapServer implements CommandResponder{// implements CommandRes
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			HttpEntity entity =new HttpEntity(mess,headers);
-			String url="http://0.0.0.0"+alertPathPrefix+"/api/v1/alerts";
+			String url="http://"+alertApi+alertPathPrefix+"/api/v1/alerts";
 			Object postForEntity = restTemplate.postForEntity(url, entity,Object.class);
 			logger.info("post success info {}",JSON.toJSON(postForEntity));
 		}
