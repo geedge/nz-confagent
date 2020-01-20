@@ -190,6 +190,10 @@ public class ConfagentJob{
 		Map result=new HashMap();
 		//获取所有sub信息 配置联邦
 		List<Promserver> subInfos = promserverService.querySubInfosByType(2);
+		if(subInfos==null||subInfos.size()==0) {
+			logger.info("promserver is null");
+			return null;
+		}
 		logger.info("centerHandle : There are all subInfos : {}",JSON.toJSON(subInfos));
 		
 		//配置rule相关文件信息 目前固定为rule.yml

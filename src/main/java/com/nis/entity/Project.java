@@ -6,6 +6,7 @@ public class Project implements Serializable{
 	private Integer id;
 	private String name;
 	private String remark;
+	private Boolean buildIn;
 	public Integer getId() {
 		return id;
 	}
@@ -24,5 +25,10 @@ public class Project implements Serializable{
 	public void setRemark(String remark) {
 		this.remark = remark;
 	}
-	
+	public Boolean getBuildIn() {
+		return buildIn;
+	}
+	public void setBuildIn(Boolean buildIn) {
+		this.buildIn = buildIn;
+	}
 }

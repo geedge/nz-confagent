@@ -1,6 +1,7 @@
 package com.nis.entity;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public class Promserver implements Serializable{
 	
@@ -10,6 +11,8 @@ public class Promserver implements Serializable{
 	private String host;
 	private Integer port;
 	private Integer type;
+	private Boolean status;
+	private Date lastUpdate;
 	public Integer getId() {
 		return id;
 	}
@@ -39,5 +42,17 @@ public class Promserver implements Serializable{
 	}
 	public void setPort(Integer port) {
 		this.port = port;
+	}
+	public Boolean getStatus() {
+		return status;
+	}
+	public void setStatus(Boolean status) {
+		this.status = status;
+	}
+	public Date getLastUpdate() {
+		return lastUpdate;
+	}
+	public void setLastUpdate(Date lastUpdate) {
+		this.lastUpdate = lastUpdate;
 	}	
 }

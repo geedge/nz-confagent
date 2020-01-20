@@ -11,6 +11,7 @@ public class Module implements Serializable{
 	private String param;
 	private String path;
 	private String remark;
+	private Boolean buildIn;
 	public Integer getId() {
 		return id;
 	}
@@ -53,5 +54,10 @@ public class Module implements Serializable{
 	public void setRemark(String remark) {
 		this.remark = remark;
 	}
-	
+	public Boolean getBuildIn() {
+		return buildIn;
+	}
+	public void setBuildIn(Boolean buildIn) {
+		this.buildIn = buildIn;
+	}
 }
