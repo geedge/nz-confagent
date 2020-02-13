@@ -5,10 +5,14 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import com.alibaba.fastjson.JSON;
 import com.nis.entity.AlertManagerEnum;
@@ -30,9 +34,9 @@ import com.nis.util.YamlUtil;
  * @author Th
  *
  */
-public class ConfagentJob{
+public class ConfagentJob extends QuartzJobBean {
 	private Logger logger = LoggerFactory.getLogger(ConfagentJob.class);
-	private Map<String,Integer> confEvents=null;
+	private static Map<String,Integer> confEvents=null;
 	@Autowired
 	private PromserverService promserverService;
 	@Autowired
@@ -45,17 +49,20 @@ public class ConfagentJob{
 	private SysConfigService sysConfigService;
 	@Autowired
     private ConfigUtil configUtil;
-	@Value("${ipaddr}")
+	@Value("${confagent.ipaddr}")
 	private String ipaddr;
-	@Value("${ymlPath}")
+	@Value("${confagent.ymlPath}")
 	private String ymlPath;
-	@Value("${ruleYmlPath}")
+	@Value("${confagent.ruleYmlPath}")
 	private String ruleYmlPath;
-	@Value("${prometheusPort}")
+	@Value("${confagent.prometheusPort}")
 	private	String prometheusPort;
+	@Value("${confagent.metricsPath}")
+	private String metricsPath;
 	
 	@SuppressWarnings("unchecked")
-	public void execute(){
+	@Override
+	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
 		logger.info("task start");
 		//获取本机ip地址 获取本机所属角色信息
 		logger.info("The local IP address is {}",ipaddr);
@@ -188,6 +195,8 @@ public class ConfagentJob{
 	 */
 	public Map centerHandle() {
 		Map result=new HashMap();
+		//查询sys_config表获取数据
+		List<SysConfig> sysConfigs = sysConfigService.queryList();
 		//获取所有sub信息 配置联邦
 		List<Promserver> subInfos = promserverService.querySubInfosByType(2);
 		if(subInfos==null||subInfos.size()==0) {
@@ -209,8 +218,7 @@ public class ConfagentJob{
 //		m1.put("scrape_interval", "15s");
 		m1.put("honor_labels", true);
 		m1.put("metrics_path", "/federate");
-		
-		
+				
 		List l2 =new ArrayList();
 		List l3 =new ArrayList();
 		//获取默认端口号
@@ -231,6 +239,45 @@ public class ConfagentJob{
 		m1.put("params", m3);
 		
 		l.add(m1);
+		
+		
+		
+		//配置自监控相关任务
+		Map nezhaMetrics = new HashMap();
+		Map nezhaMetrics2 = new HashMap();
+		nezhaMetrics.put("job_name","nezha_metrics");
+		
+		Map confagentMetrics = new HashMap();
+		Map confagentMetrics2 = new HashMap();
+		confagentMetrics.put("job_name","confagent_metrics");
+		
+		List nezhaMetricsList =new ArrayList();
+		List nezhaMetricsList2 =new ArrayList();
+		List confagentMetricsList =new ArrayList();
+		List confagentMetricsList2 =new ArrayList();
+		
+		nezhaMetrics.put("static_configs", nezhaMetricsList);
+		confagentMetrics.put("static_configs", confagentMetricsList);
+		
+		if(!sysConfigs.isEmpty()) {
+			for(SysConfig sysconfig : sysConfigs) {
+				if(sysconfig.getParamKey().equals(AlertManagerEnum.ALERT_API.getValue())) {
+					nezhaMetricsList2.add(sysconfig.getParamValue());
+				}else if(sysconfig.getParamKey().equals(AlertManagerEnum.ALERT_PATH_PREFIX.getValue())){
+					nezhaMetrics.put("metrics_path", sysconfig.getParamValue()+metricsPath);
+				}else if(sysconfig.getParamKey().equals(AlertManagerEnum.CONFAGENT_API.getValue())) {
+					confagentMetricsList2.add(sysconfig.getParamValue());
+				}else if(sysconfig.getParamKey().equals(AlertManagerEnum.CONFAGENT_PATH.getValue())) {
+					confagentMetrics.put("metrics_path", sysconfig.getParamValue()+metricsPath);
+				}
+			}
+		}
+		nezhaMetrics2.put("targets", nezhaMetricsList2);
+		confagentMetrics2.put("targets", confagentMetricsList2);
+		nezhaMetricsList.add(nezhaMetrics2);
+		confagentMetricsList.add(confagentMetrics2);
+		l.add(nezhaMetrics);
+		l.add(confagentMetrics);
 		
 		result.put("scrape_configs", l);
 		
@@ -274,8 +321,7 @@ public class ConfagentJob{
 		logger.info("centerHandle : alert rule Info : {}",JSON.toJSON(groups));
 		//配置alertManager
 		
-		//查询sys_config表获取数据
-		List<SysConfig> sysConfigs = sysConfigService.queryList();
+		
 		Map alertManager =new HashMap();
 		List staticConfigList=new ArrayList();
 		LinkedHashMap staticConfigs =new LinkedHashMap();
@@ -286,9 +332,9 @@ public class ConfagentJob{
 		List alertData =new ArrayList();
 		if(!sysConfigs.isEmpty()) {
 			for(SysConfig sysconfig : sysConfigs) {
-				if(sysconfig.getParamKey().equals(AlertManagerEnum.Alert_api.getValue())) {
+				if(sysconfig.getParamKey().equals(AlertManagerEnum.ALERT_API.getValue())) {
 					alertData.add(sysconfig.getParamValue());
-				}else if(sysconfig.getParamKey().equals(AlertManagerEnum.Alert_path_prefix.getValue())){
+				}else if(sysconfig.getParamKey().equals(AlertManagerEnum.ALERT_PATH_PREFIX.getValue())){
 					staticConfigs.put("path_prefix", sysconfig.getParamValue());
 				}
 			}

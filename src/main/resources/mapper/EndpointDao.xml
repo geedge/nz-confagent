@@ -87,4 +87,11 @@
 		where a.idc_id=#{idcId}
 	</select>
 	
+	<select id="selectEndpointMetrics" resultType="com.nis.entity.MetricsDto">
+		select count(*) total , ps.id id, ps.host host 
+		from endpoint e left join asset a on a.id=e.asset_id
+		left join idc i on i.id=a.idc_id
+		left join prom_server ps on ps.idc_id=i.id
+		where ps.`status`=1 and a.state=1 group by ps.id
+	</select>
 </mapper>

@@ -50,6 +50,9 @@ import org.snmp4j.util.ThreadPool;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -59,12 +62,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.alibaba.druid.util.StringUtils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.nis.entity.AlertManagerEnum;
 import com.nis.entity.AlertRule;
+import com.nis.entity.ConfagentMetrics;
 import com.nis.entity.SysConfig;
 import com.nis.entity.TrapMessage;
 import com.nis.service.AlertRuleService;
@@ -84,15 +87,17 @@ import com.nis.service.SysConfigService;
  * @author YJS
  * 
  */
-public class SNMPTrapServer implements CommandResponder{// implements CommandResponder, extends Service
+@Component
+@Order(1)
+public class SNMPTrapServer implements CommandResponder,ApplicationRunner{// implements CommandResponder, extends Service
 	private static Logger logger = LoggerFactory.getLogger(SNMPTrapServer.class);
 	private static SNMPTrapServer ts = null;
 	private AlertRule alertRule;
-	@Value("${snmp.ip}")
+	@Value("${confagent.snmp.ip}")
 	private String snmpIp;
-	@Value("${snmp.trapThredPoolSize}")
+	@Value("${confagent.snmp.trapThredPoolSize}")
 	private String snmpTrapThredPoolSize;
-	@Value("${snmp.trapPort}")
+	@Value("${confagent.snmp.trapPort}")
 	private String snmpTrapPort;
 	@Autowired
 	private AlertRuleService alertRuleService;
@@ -100,6 +105,8 @@ public class SNMPTrapServer implements CommandResponder{// implements CommandRes
 	private SysConfigService sysConfigService;
 	private String alertApi;
 	private String alertPathPrefix;
+	@Autowired
+	private ConfagentMetrics confagentMetrics;
 	/*public static SNMPTrapServer getInstance() throws IOException{
 		if(ts == null){
 			ts = new SNMPTrapServer();
@@ -109,6 +116,11 @@ public class SNMPTrapServer implements CommandResponder{// implements CommandRes
 		}
 		return ts;
 	}*/
+	
+	@Override
+	public void run(ApplicationArguments args) throws Exception {
+		initServer();
+	}
 	
 	public void initServer() throws Exception{
 		logger.info("snmpTrapThredPoolSize is {}",snmpTrapThredPoolSize);
@@ -183,9 +195,9 @@ public class SNMPTrapServer implements CommandResponder{// implements CommandRes
 			List<SysConfig> sysConfigs = sysConfigService.queryList();
 			if(!sysConfigs.isEmpty()) {
 				for(SysConfig sysconfig : sysConfigs) {
-					if(sysconfig.getParamKey().equals(AlertManagerEnum.Alert_api.getValue())) {
+					if(sysconfig.getParamKey().equals(AlertManagerEnum.ALERT_API.getValue())) {
 						alertApi=sysconfig.getParamValue();
-					}else if(sysconfig.getParamKey().equals(AlertManagerEnum.Alert_path_prefix.getValue())){
+					}else if(sysconfig.getParamKey().equals(AlertManagerEnum.ALERT_PATH_PREFIX.getValue())){
 						alertPathPrefix=sysconfig.getParamValue();
 					}
 				}
@@ -317,7 +329,7 @@ public class SNMPTrapServer implements CommandResponder{// implements CommandRes
 			description.append(",oid:"+trapmessageinfo.getTrapOID());
 			description.append(",value:"+value);
 			String trapName = trapmessageinfo.getTrapName();
-			if(!StringUtils.isEmpty(trapName)) {
+			if(trapName!=null&&trapName.length()>0) {
 				description.append(",trapName:"+trapName);
 			}
 			StringBuilder summary=new StringBuilder("snmptrap:");
@@ -358,6 +370,7 @@ public class SNMPTrapServer implements CommandResponder{// implements CommandRes
 			String url="http://"+alertApi+alertPathPrefix+"/api/v1/alerts";
 			Object postForEntity = restTemplate.postForEntity(url, entity,Object.class);
 			logger.info("post success info {}",JSON.toJSON(postForEntity));
+			confagentMetrics.snmpCounter.increment();
 		}
 		catch (Exception exception)
 		{

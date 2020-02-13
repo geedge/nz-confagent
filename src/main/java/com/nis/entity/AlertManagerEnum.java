@@ -1,8 +1,10 @@
 package com.nis.entity;
 
 public enum AlertManagerEnum {
-	Alert_api("alert_api"), 
-	Alert_path_prefix("alert_path_prefix"); 
+	ALERT_API("alert_api"), 
+	ALERT_PATH_PREFIX("alert_path_prefix"),
+	CONFAGENT_API("confagent_api"),
+	CONFAGENT_PATH("confagent_path");
     private final String paramkey; 
     private AlertManagerEnum(String paramkey) { 
            this.paramkey = paramkey; 

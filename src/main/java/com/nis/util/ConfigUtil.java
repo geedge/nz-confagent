@@ -6,10 +6,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ConfigUtil {
-	@Value("${ipaddr}")
+	@Value("${confagent.ipaddr}")
 	private String ipaddr;
-	@Value("${ymlPath}")
+	@Value("${confagent.ymlPath}")
 	private String ymlPath;
-	@Value("${prometheusPort}")
+	@Value("${confagent.prometheusPort}")
 	private	String prometheusPort;
 }
