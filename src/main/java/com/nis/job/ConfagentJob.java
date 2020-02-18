@@ -66,7 +66,7 @@ public class ConfagentJob extends QuartzJobBean {
 	@Value("${confagent.metricsPath}")
 	private String metricsPath;
 	@Autowired
-	private RedisTemplate redisTemplate;
+	private RedisTemplate<Object,Object> redisTemplate;
 	
 	@SuppressWarnings("unchecked")
 	@Override
@@ -366,17 +366,12 @@ public class ConfagentJob extends QuartzJobBean {
 	 * 定时任务中将promserver信息储存到redis中
 	 */
 	public void savePromeserverInfoToRedis() {
-		RedisSerializer stringSerializer = new StringRedisSerializer();
-	    redisTemplate.setKeySerializer(stringSerializer);
-	    redisTemplate.setValueSerializer(stringSerializer);
-	    redisTemplate.setHashKeySerializer(stringSerializer);
-	    redisTemplate.setHashValueSerializer(stringSerializer);
 		// 每次同步操作先将之前缓存内容清空然后更新
 		HashOperations opsForHash = redisTemplate.opsForHash();
-		Set<String> keys = redisTemplate.opsForHash().keys(Constant.ENDPOINT_PROM);
+		Set<Object> keys = redisTemplate.opsForHash().keys(Constant.ENDPOINT_PROM);
 		logger.info("endpoint_prom keys :{}",JSON.toJSON(keys));
 		if(!keys.isEmpty()) {
-			for(String key:keys) {
+			for(Object key:keys) {
 				opsForHash.delete(Constant.ENDPOINT_PROM, key);
 			}
 			logger.info("delete "+Constant.ENDPOINT_PROM+" all keys ");
@@ -385,7 +380,7 @@ public class ConfagentJob extends QuartzJobBean {
 		if(endpointPromInfos!=null && endpointPromInfos.size()>0) {
 			for(Endpoint endpointPromInfo : endpointPromInfos) {
 				logger.info("savePromeserverInfoToRedis"+endpointPromInfo.getId()+"--->"+JSON.toJSONString(endpointPromInfo.getPromserver()));
-				redisTemplate.boundHashOps(Constant.ENDPOINT_PROM).put(endpointPromInfo.getId().toString(), JSON.toJSONString(endpointPromInfo.getPromserver()));
+				redisTemplate.boundHashOps(Constant.ENDPOINT_PROM).put(endpointPromInfo.getId().toString(), endpointPromInfo.getPromserver());
 			}
 		}
 	}
