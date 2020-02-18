@@ -24,4 +24,9 @@ public class EndpointServiceImpl implements EndpointService{
 		return endpointDao.selectEndpointMetrics();
 	}
 
+	@Override
+	public List<Endpoint> queryPromServerInfo() {
+		return endpointDao.selectPromServerInfo();
+	}
+
 }

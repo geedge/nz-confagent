@@ -21,7 +21,8 @@ import java.util.*;
 
  */
 public class Constant {
-	
+	/** redis 存储promserver信息 hash key */
+	public static final String ENDPOINT_PROM="endpoint_prom";
 	/** 超级管理员ID */
 	public static final int SUPER_ADMIN = 1;
     /** 数据权限过滤 */

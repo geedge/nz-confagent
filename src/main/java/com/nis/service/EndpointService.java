@@ -16,4 +16,9 @@ public interface EndpointService {
 	 * 自定义指标当前采集endpoint个数
 	 */
 	List<MetricsDto> queryEndpointMetrics();
+	
+	/**
+	 * 查询endpoint和promserver对应关系
+	 */
+	List<Endpoint> queryPromServerInfo();
 }

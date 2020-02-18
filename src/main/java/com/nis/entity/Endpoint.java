@@ -16,6 +16,7 @@ public class Endpoint implements Serializable{
 	private Idc idc;
 	private Integer idcId;
 	private Project project;
+	private Promserver promserver;
 	public Integer getId() {
 		return id;
 	}
@@ -87,6 +88,12 @@ public class Endpoint implements Serializable{
 	}
 	public void setProject(Project project) {
 		this.project = project;
+	}
+	public Promserver getPromserver() {
+		return promserver;
+	}
+	public void setPromserver(Promserver promserver) {
+		this.promserver = promserver;
 	}
 }
 

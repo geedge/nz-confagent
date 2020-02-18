@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -12,6 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import com.alibaba.fastjson.JSON;
@@ -26,6 +31,7 @@ import com.nis.service.EndpointService;
 import com.nis.service.PromserverService;
 import com.nis.service.SysConfigService;
 import com.nis.util.ConfigUtil;
+import com.nis.util.Constant;
 import com.nis.util.PropertyPlaceholder;
 import com.nis.util.YamlUtil;
 
@@ -59,6 +65,8 @@ public class ConfagentJob extends QuartzJobBean {
 	private	String prometheusPort;
 	@Value("${confagent.metricsPath}")
 	private String metricsPath;
+	@Autowired
+	private RedisTemplate redisTemplate;
 	
 	@SuppressWarnings("unchecked")
 	@Override
@@ -73,6 +81,9 @@ public class ConfagentJob extends QuartzJobBean {
 		logger.info("The local ymlPath info {}",JSON.toJSON(ymlPath));
 		
 		logger.info("The local ruleYmlPath info {}",JSON.toJSON(ruleYmlPath));
+		
+		savePromeserverInfoToRedis();
+		
 		if(promserver!=null) {
 			// 判断本次表格数据与之前数据是否有变化判断是否执行操作
 			boolean changeFlag = confEventService.compareData(confEvents);
@@ -349,5 +360,32 @@ public class ConfagentJob extends QuartzJobBean {
 		result.put("alerting", alertManager);
 		logger.info("centerHandle : alert manager Info : {}",JSON.toJSON(alertManager));
 		return result;
+	}
+	
+	/**
+	 * 定时任务中将promserver信息储存到redis中
+	 */
+	public void savePromeserverInfoToRedis() {
+		RedisSerializer stringSerializer = new StringRedisSerializer();
+	    redisTemplate.setKeySerializer(stringSerializer);
+	    redisTemplate.setValueSerializer(stringSerializer);
+	    redisTemplate.setHashKeySerializer(stringSerializer);
+	    redisTemplate.setHashValueSerializer(stringSerializer);
+		// 每次同步操作先将之前缓存内容清空然后更新
+		HashOperations opsForHash = redisTemplate.opsForHash();
+		Set<String> keys = redisTemplate.opsForHash().keys(Constant.ENDPOINT_PROM);
+		logger.info("endpoint_prom keys :{}",JSON.toJSON(keys));
+		if(!keys.isEmpty()) {
+			for(String key:keys) {
+				opsForHash.delete(Constant.ENDPOINT_PROM, key);
+			}
+		}
+		List<Endpoint> endpointPromInfos = endpointService.queryPromServerInfo();
+		if(endpointPromInfos!=null && endpointPromInfos.size()>0) {
+			for(Endpoint endpointPromInfo : endpointPromInfos) {
+				logger.info("savePromeserverInfoToRedis"+endpointPromInfo.getId()+"--->"+JSON.toJSONString(endpointPromInfo.getPromserver()));
+				redisTemplate.boundHashOps(Constant.ENDPOINT_PROM).put(endpointPromInfo.getId().toString(), JSON.toJSONString(endpointPromInfo.getPromserver()));
+			}
+		}
 	}
 }

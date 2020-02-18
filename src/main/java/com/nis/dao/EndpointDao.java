@@ -13,4 +13,6 @@ public interface EndpointDao {
 	List<Endpoint> selectExporterInfos(Integer idcId);
 	
 	List<MetricsDto> selectEndpointMetrics();
+	
+	List<Endpoint> selectPromServerInfo();
 }

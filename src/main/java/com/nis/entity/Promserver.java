@@ -12,7 +12,7 @@ public class Promserver implements Serializable{
 	private Integer port;
 	private Integer type;
 	private Boolean status;
-	private Date lastUpdate;
+	private Date checkTime;
 	public Integer getId() {
 		return id;
 	}
@@ -49,10 +49,10 @@ public class Promserver implements Serializable{
 	public void setStatus(Boolean status) {
 		this.status = status;
 	}
-	public Date getLastUpdate() {
-		return lastUpdate;
+	public Date getCheckTime() {
+		return checkTime;
 	}
-	public void setLastUpdate(Date lastUpdate) {
-		this.lastUpdate = lastUpdate;
-	}	
+	public void setCheckTime(Date checkTime) {
+		this.checkTime = checkTime;
+	}
 }

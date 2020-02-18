@@ -48,6 +48,16 @@
 	    	<result column="name" property="name"/>
 	    	<result column="remark" property="remark"/>
 	    </association>
+	    
+	    <association columnPrefix="prom_" property="promserver" javaType="com.nis.entity.Promserver">
+	    	<id column="id" property="id"/>
+	    	<result column="idc_id" property="idcId"></result>
+	    	<result column="host" property="host"/>
+	    	<result column="port" property="port"/>
+	    	<result column="type" property="type"/>
+	    	<result column="status" property="status"/>
+	    	<result column="check_time" property="checkTime"/>
+	    </association>
     </resultMap>
 	
 	<select id="selectExporterInfos" resultMap="endpoint">
@@ -93,5 +103,18 @@
 		left join idc i on i.id=a.idc_id
 		left join prom_server ps on ps.idc_id=i.id
 		where ps.`status`=1 and a.state=1 group by ps.id
+	</select>
+	
+	<select id="selectPromServerInfo" resultMap="endpoint">
+		select e.*,
+		prom.id  AS prom_id,
+		prom.idc_id  AS prom_idc_id,
+		prom.host  AS prom_host,
+		prom.type  AS prom_type,
+		prom.port  AS prom_port,
+		prom.status  AS prom_status,
+		prom.check_time  AS prom_check_time
+		from endpoint e left join asset a  on e.asset_id=a.id
+		left join prom_server prom on a.idc_id=prom.idc_id
 	</select>
 </mapper>

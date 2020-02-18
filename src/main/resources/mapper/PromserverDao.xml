@@ -8,7 +8,7 @@
         <result property="port" column="port"/>
         <result property="type" column="type"/>
         <result property="status" column="status"/>
-        <result property="lastUpdate" column="last_update"/>
+        <result property="checkTime" column="check_Time"/>
     </resultMap>
     
 	<select id="selectList" resultMap="promserver">
