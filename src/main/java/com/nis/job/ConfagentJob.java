@@ -379,6 +379,7 @@ public class ConfagentJob extends QuartzJobBean {
 			for(String key:keys) {
 				opsForHash.delete(Constant.ENDPOINT_PROM, key);
 			}
+			logger.info("delete "+Constant.ENDPOINT_PROM+" all keys ");
 		}
 		List<Endpoint> endpointPromInfos = endpointService.queryPromServerInfo();
 		if(endpointPromInfos!=null && endpointPromInfos.size()>0) {
