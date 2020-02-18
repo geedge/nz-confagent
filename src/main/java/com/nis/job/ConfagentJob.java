@@ -380,7 +380,7 @@ public class ConfagentJob extends QuartzJobBean {
 		if(endpointPromInfos!=null && endpointPromInfos.size()>0) {
 			for(Endpoint endpointPromInfo : endpointPromInfos) {
 				logger.info("savePromeserverInfoToRedis"+endpointPromInfo.getId()+"--->"+JSON.toJSONString(endpointPromInfo.getPromserver()));
-				redisTemplate.boundHashOps(Constant.ENDPOINT_PROM).put(endpointPromInfo.getId().toString(), endpointPromInfo.getPromserver());
+				redisTemplate.boundHashOps(Constant.ENDPOINT_PROM).put(endpointPromInfo.getId().toString(), endpointPromInfo.getPromserver().getId());
 			}
 		}
 	}
