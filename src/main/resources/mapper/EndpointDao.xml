@@ -105,7 +105,7 @@
 		where ps.`status`=1 and a.state=1 group by ps.id
 	</select>
 	
-	<select id="selectPromServerInfo" resultMap="endpoint">
+	<select id="selectPromServerInfo" resultMap="endpoint" >
 		select e.*,
 		prom.id  AS prom_id,
 		prom.idc_id  AS prom_idc_id,
@@ -116,5 +116,6 @@
 		prom.check_time  AS prom_check_time
 		from endpoint e left join asset a  on e.asset_id=a.id
 		left join prom_server prom on a.idc_id=prom.idc_id
+		where prom.id=#{id}
 	</select>
 </mapper>

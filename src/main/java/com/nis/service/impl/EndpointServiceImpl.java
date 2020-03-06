@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.nis.dao.EndpointDao;
 import com.nis.entity.Endpoint;
 import com.nis.entity.MetricsDto;
+import com.nis.entity.Promserver;
 import com.nis.service.EndpointService;
 @Service
 public class EndpointServiceImpl implements EndpointService{
@@ -25,8 +26,8 @@ public class EndpointServiceImpl implements EndpointService{
 	}
 
 	@Override
-	public List<Endpoint> queryPromServerInfo() {
-		return endpointDao.selectPromServerInfo();
+	public List<Endpoint> queryPromServerInfo(Integer promserverId) {
+		return endpointDao.selectPromServerInfo(promserverId);
 	}
 
 }

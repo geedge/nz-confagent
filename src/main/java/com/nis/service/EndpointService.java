@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.nis.entity.Endpoint;
 import com.nis.entity.MetricsDto;
+import com.nis.entity.Promserver;
 
 public interface EndpointService {
 
@@ -20,5 +21,5 @@ public interface EndpointService {
 	/**
 	 * 查询endpoint和promserver对应关系
 	 */
-	List<Endpoint> queryPromServerInfo();
+	List<Endpoint> queryPromServerInfo(Integer promserverId);
 }

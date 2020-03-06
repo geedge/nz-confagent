@@ -14,5 +14,5 @@ public interface EndpointDao {
 	
 	List<MetricsDto> selectEndpointMetrics();
 	
-	List<Endpoint> selectPromServerInfo();
+	List<Endpoint> selectPromServerInfo(Integer promserverId);
 }

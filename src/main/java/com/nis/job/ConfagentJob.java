@@ -81,9 +81,7 @@ public class ConfagentJob extends QuartzJobBean {
 		logger.info("The local ymlPath info {}",JSON.toJSON(ymlPath));
 		
 		logger.info("The local ruleYmlPath info {}",JSON.toJSON(ruleYmlPath));
-		
-		savePromeserverInfoToRedis();
-		
+
 		if(promserver!=null) {
 			// 判断本次表格数据与之前数据是否有变化判断是否执行操作
 			boolean changeFlag = confEventService.compareData(confEvents);
@@ -106,6 +104,8 @@ public class ConfagentJob extends QuartzJobBean {
 						}
 					}
 				}else if(promserver.getType()==2) {
+					// 将endpoint对应的promserver对应信息存到redis
+					savePromeserverInfoToRedis(promserver);
 					List result = subHandle(promserver);
 					logger.debug("subHandle list info {} ",JSON.toJSON(result));
 					if(result!=null) {
@@ -234,9 +234,13 @@ public class ConfagentJob extends QuartzJobBean {
 		List l3 =new ArrayList();
 		//获取默认端口号
 //		String prometheusPort = (String)PropertyPlaceholder.getProperty("prometheusPort");
+		List<String> promserverApi =new ArrayList<String>();
+		List<String> confagentIps =new ArrayList<String>();
 		for(Promserver subInfo:subInfos) {
-			l3.add(subInfo.getHost()+":"+subInfo.getPort());
+			promserverApi.add(subInfo.getHost()+":"+subInfo.getPort());
+			confagentIps.add(subInfo.getHost());
 		}
+		l3.addAll(promserverApi);
 		Map m2 =new HashMap();
 		m2.put("targets", l3);
 		l2.add(m2);
@@ -276,8 +280,11 @@ public class ConfagentJob extends QuartzJobBean {
 					nezhaMetricsList2.add(sysconfig.getParamValue());
 				}else if(sysconfig.getParamKey().equals(AlertManagerEnum.ALERT_PATH_PREFIX.getValue())){
 					nezhaMetrics.put("metrics_path", sysconfig.getParamValue()+metricsPath);
-				}else if(sysconfig.getParamKey().equals(AlertManagerEnum.CONFAGENT_API.getValue())) {
-					confagentMetricsList2.add(sysconfig.getParamValue());
+				}else if(sysconfig.getParamKey().equals(AlertManagerEnum.CONFAGENT_PORT.getValue())) {
+					for(String confagentIp : confagentIps) {
+						confagentIp=confagentIp+":"+sysconfig.getParamValue();
+					}
+					confagentMetricsList2.addAll(confagentIps);
 				}else if(sysconfig.getParamKey().equals(AlertManagerEnum.CONFAGENT_PATH.getValue())) {
 					confagentMetrics.put("metrics_path", sysconfig.getParamValue()+metricsPath);
 				}
@@ -365,18 +372,18 @@ public class ConfagentJob extends QuartzJobBean {
 	/**
 	 * 定时任务中将promserver信息储存到redis中
 	 */
-	public void savePromeserverInfoToRedis() {
+	public void savePromeserverInfoToRedis(Promserver promserver) {
 		// 每次同步操作先将之前缓存内容清空然后更新
 		HashOperations opsForHash = redisTemplate.opsForHash();
 		Set<Object> keys = redisTemplate.opsForHash().keys(Constant.ENDPOINT_PROM);
 		logger.info("endpoint_prom keys :{}",JSON.toJSON(keys));
-		if(!keys.isEmpty()) {
+		/*if(!keys.isEmpty()) {
 			for(Object key:keys) {
 				opsForHash.delete(Constant.ENDPOINT_PROM, key);
 			}
 			logger.info("delete "+Constant.ENDPOINT_PROM+" all keys ");
-		}
-		List<Endpoint> endpointPromInfos = endpointService.queryPromServerInfo();
+		}*/
+		List<Endpoint> endpointPromInfos = endpointService.queryPromServerInfo(promserver.getId());
 		if(endpointPromInfos!=null && endpointPromInfos.size()>0) {
 			for(Endpoint endpointPromInfo : endpointPromInfos) {
 				logger.info("savePromeserverInfoToRedis"+endpointPromInfo.getId()+"--->"+JSON.toJSONString(endpointPromInfo.getPromserver()));
