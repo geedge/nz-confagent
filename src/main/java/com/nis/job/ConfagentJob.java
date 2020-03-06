@@ -282,9 +282,10 @@ public class ConfagentJob extends QuartzJobBean {
 					nezhaMetrics.put("metrics_path", sysconfig.getParamValue()+metricsPath);
 				}else if(sysconfig.getParamKey().equals(AlertManagerEnum.CONFAGENT_PORT.getValue())) {
 					for(String confagentIp : confagentIps) {
-						confagentIp=confagentIp+":"+sysconfig.getParamValue();
+						confagentMetricsList2.add(confagentIp+":"+sysconfig.getParamValue());
 					}
-					confagentMetricsList2.addAll(confagentIps);
+				}else if(sysconfig.getParamKey().equals(AlertManagerEnum.CONFAGENT_API.getValue())) {
+					confagentMetricsList2.add(sysconfig.getParamValue());
 				}else if(sysconfig.getParamKey().equals(AlertManagerEnum.CONFAGENT_PATH.getValue())) {
 					confagentMetrics.put("metrics_path", sysconfig.getParamValue()+metricsPath);
 				}
