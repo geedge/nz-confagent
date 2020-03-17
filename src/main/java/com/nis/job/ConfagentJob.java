@@ -104,8 +104,6 @@ public class ConfagentJob extends QuartzJobBean {
 						}
 					}
 				}else if(promserver.getType()==2) {
-					// 将endpoint对应的promserver对应信息存到redis
-					savePromeserverInfoToRedis(promserver);
 					List result = subHandle(promserver);
 					logger.debug("subHandle list info {} ",JSON.toJSON(result));
 					if(result!=null) {
@@ -135,6 +133,8 @@ public class ConfagentJob extends QuartzJobBean {
 	 * 处理sub相关逻辑
 	 */
 	public List subHandle(Promserver promserver) {
+		//保存当前promserver hash分配后处理的endpoint信息
+		List<Endpoint> subs = new ArrayList<Endpoint>();
 		//查询同一个idc下相同角色sub的数量以及exporter的数量信息
 		List<Promserver> subInfos = promserverService.querySubInfos(promserver);
 		logger.info("subHandle : There are {} sub in total",subInfos.size());
@@ -158,6 +158,7 @@ public class ConfagentJob extends QuartzJobBean {
 			result=new ArrayList();
 			for(int m=0;m<endpointInfos.size();m++) {
 				if(m%subInfos.size()==index) {
+					subs.add(endpointInfos.get(m));
 					LinkedHashMap job = new LinkedHashMap();
 //					job.put("job_name", endpointInfos.get(m).getModule().getName()+endpointInfos.get(m).getHost());
 					job.put("job_name", "ed_"+endpointInfos.get(m).getId());
@@ -196,6 +197,8 @@ public class ConfagentJob extends QuartzJobBean {
 					result.add(job);
 				}
 			}
+			//将promserver和处理的endpoint对应关系储存到redis
+			savePromeserverInfoToRedis(promserver,subs);
 		}
 		logger.info("subHandle : result : {} ",JSON.toJSON(result));
 		return result;
@@ -373,8 +376,7 @@ public class ConfagentJob extends QuartzJobBean {
 	/**
 	 * 定时任务中将promserver信息储存到redis中
 	 */
-	public void savePromeserverInfoToRedis(Promserver promserver) {
-		// 每次同步操作先将之前缓存内容清空然后更新
+	public void savePromeserverInfoToRedis(Promserver promserver,List<Endpoint> endpoints) {
 		HashOperations opsForHash = redisTemplate.opsForHash();
 		Set<Object> keys = redisTemplate.opsForHash().keys(Constant.ENDPOINT_PROM);
 		logger.info("endpoint_prom keys :{}",JSON.toJSON(keys));
@@ -384,9 +386,8 @@ public class ConfagentJob extends QuartzJobBean {
 			}
 			logger.info("delete "+Constant.ENDPOINT_PROM+" all keys ");
 		}*/
-		List<Endpoint> endpointPromInfos = endpointService.queryPromServerInfo(promserver.getId());
-		if(endpointPromInfos!=null && endpointPromInfos.size()>0) {
-			for(Endpoint endpointPromInfo : endpointPromInfos) {
+		if(endpoints!=null && endpoints.size()>0) {
+			for(Endpoint endpointPromInfo : endpoints) {
 				logger.info("savePromeserverInfoToRedis"+endpointPromInfo.getId()+"--->"+JSON.toJSONString(endpointPromInfo.getPromserver()));
 				redisTemplate.boundHashOps(Constant.ENDPOINT_PROM).put(endpointPromInfo.getId().toString(), endpointPromInfo.getPromserver().getId());
 			}
