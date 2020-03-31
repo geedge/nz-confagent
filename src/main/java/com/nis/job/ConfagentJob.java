@@ -161,7 +161,8 @@ public class ConfagentJob extends QuartzJobBean {
 					subs.add(endpointInfos.get(m));
 					LinkedHashMap job = new LinkedHashMap();
 //					job.put("job_name", endpointInfos.get(m).getModule().getName()+endpointInfos.get(m).getHost());
-					job.put("job_name", "ed_"+endpointInfos.get(m).getId());
+//					job.put("job_name", "ed_"+endpointInfos.get(m).getId());
+					job.put("job_name", endpointInfos.get(m).getId());
 					job.put("metrics_path", endpointInfos.get(m).getPath());
 					List list=new ArrayList();
 					list.add(endpointInfos.get(m).getHost()+":"+endpointInfos.get(m).getPort());
@@ -179,6 +180,15 @@ public class ConfagentJob extends QuartzJobBean {
 					list2.add(job2);
 					job.put("static_configs", list2);
 					
+					List list3=new ArrayList();
+					Map job4=new HashMap();
+					job4.put("source_labels", "__address__");
+					job4.put("regex", "(.*)");
+					job4.put("target_label", "endpoint");
+					job4.put("action", "replace");
+					job4.put("replacement", "$1");
+					list3.add(job4);
+					job.put("relabel_configs", list3);
 					//处理endpoint中param字段json串 请求参数
 					String param = endpointInfos.get(m).getParam();
 					Map params=null;
